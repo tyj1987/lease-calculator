@@ -1,0 +1,29 @@
+[Unit]
+Description=Lease Calculator Backend Service
+After=network.target
+
+[Service]
+Type=simple
+User=leaseapp
+Group=leaseapp
+WorkingDirectory=/opt/lease-calculator/backend
+Environment=PATH=/opt/lease-calculator/backend/venv/bin
+ExecStart=/opt/lease-calculator/backend/venv/bin/python app.py
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=10
+
+# 日志配置
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lease-calculator
+
+# 环境变量
+Environment=FLASK_ENV=production
+Environment=FLASK_APP=app.py
+
+[Install]
+WantedBy=multi-user.target

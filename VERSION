@@ -1,0 +1,41 @@
+===========================================
+融资租赁计算器 - 生产版本
+===========================================
+版本: 1.0.0
+构建时间: Mon Jun 30 03:47:50 AM CST 2025
+适用系统: CentOS 7.x
+Python版本: 3.6+
+Node.js版本: 16+
+
+✨ 功能特性:
+• 多种租金计算方法 (等额本息、等额本金、平息法)
+• 方案对比分析 (最多5个方案)
+• 敏感性分析 (利率、期限、本金敏感度)
+• 反向计算 (推算年利率/IRR)
+• 保证金处理 (多种冲抵模式)
+• 数据导出 (Excel/JSON格式)
+• 响应式Web界面 (支持移动端)
+• 生产级优化 (Nginx+Gunicorn)
+
+📦 部署包内容:
+• backend/           Python后端应用
+• frontend/          React前端构建文件  
+• config/            系统配置文件
+• docs/              部署文档
+• install.sh         自动安装脚本
+• setup-domain.sh    域名配置脚本
+
+🚀 快速部署:
+1. tar -xzf lease-calculator-production-20250630_034750.tar.gz
+2. cd lease-calculator-production
+3. sudo ./install.sh
+4. 配置域名: sudo ./setup-domain.sh your-domain.com
+
+💻 访问地址:
+• IP访问: http://服务器IP
+• 域名访问: http://your-domain.com
+• API文档: http://your-domain.com/api/health
+
+🔧 技术支持:
+如需技术支持，请提供系统信息和错误日志。
+===========================================
