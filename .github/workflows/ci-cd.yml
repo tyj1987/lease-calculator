@@ -204,10 +204,11 @@ jobs:
       if: github.event_name != 'pull_request'
         
     - name: Upload Trivy scan results
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-results.sarif'
       if: github.event_name != 'pull_request'
+      continue-on-error: true
 
   # 性能测试
   performance-test:
