@@ -24,7 +24,9 @@ def test_calculate():
     print("🧮 测试计算功能...")
 
     response = requests.post(
-        "http://127.0.0.1:5002/api/calculate", json=test_data, headers={"Content-Type": "application/json"}
+        "http://127.0.0.1:5002/api/calculate",
+        json=test_data,
+        headers={"Content-Type": "application/json"},
     )
 
     if response.status_code == 200:
@@ -48,7 +50,9 @@ def test_excel_export(calculation_result):
     export_data.update(test_data)
 
     response = requests.post(
-        "http://127.0.0.1:5002/api/export/excel", json=export_data, headers={"Content-Type": "application/json"}
+        "http://127.0.0.1:5002/api/export/excel",
+        json=export_data,
+        headers={"Content-Type": "application/json"},
     )
 
     if response.status_code == 200:
@@ -73,7 +77,9 @@ def test_json_export(calculation_result):
     export_data.update(test_data)
 
     response = requests.post(
-        "http://127.0.0.1:5002/api/export/json", json=export_data, headers={"Content-Type": "application/json"}
+        "http://127.0.0.1:5002/api/export/json",
+        json=export_data,
+        headers={"Content-Type": "application/json"},
     )
 
     if response.status_code == 200:

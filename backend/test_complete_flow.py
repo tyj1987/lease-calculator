@@ -23,11 +23,15 @@ def test_complete_calculation_flow():
         "method": "equal_annuity",  # 等额年金法
     }
 
-    print(f"📋 计算参数: 本金¥{calc_data['pv']:,}, 利率{calc_data['annual_rate']:.1%}, {calc_data['periods']}期")
+    print(
+        f"📋 计算参数: 本金¥{calc_data['pv']:,}, 利率{calc_data['annual_rate']:.1%}, {calc_data['periods']}期"
+    )
 
     # 调用计算API
     response = requests.post(
-        "http://127.0.0.1:5002/api/calculate", json=calc_data, headers={"Content-Type": "application/json"}
+        "http://127.0.0.1:5002/api/calculate",
+        json=calc_data,
+        headers={"Content-Type": "application/json"},
     )
 
     if response.status_code == 200:
@@ -42,7 +46,9 @@ def test_complete_calculation_flow():
 
         print("\n📊 测试Excel导出...")
         export_response = requests.post(
-            "http://127.0.0.1:5002/api/export/excel", json=calc_result, headers={"Content-Type": "application/json"}
+            "http://127.0.0.1:5002/api/export/excel",
+            json=calc_result,
+            headers={"Content-Type": "application/json"},
         )
 
         if export_response.status_code == 200:
@@ -55,7 +61,9 @@ def test_complete_calculation_flow():
 
         print("\n📄 测试JSON导出...")
         json_response = requests.post(
-            "http://127.0.0.1:5002/api/export/json", json=calc_result, headers={"Content-Type": "application/json"}
+            "http://127.0.0.1:5002/api/export/json",
+            json=calc_result,
+            headers={"Content-Type": "application/json"},
         )
 
         if json_response.status_code == 200:

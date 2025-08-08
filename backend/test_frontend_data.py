@@ -15,12 +15,20 @@ incomplete_data = {
     "total_interest": 128109.14,
     "irr": 0.052945,
     "schedule": [
-        {"period": 1, "payment": 31336.37, "principal": 24669.70, "interest": 6666.67, "remaining_balance": 975330.30}
+        {
+            "period": 1,
+            "payment": 31336.37,
+            "principal": 24669.70,
+            "interest": 6666.67,
+            "remaining_balance": 975330.30,
+        }
     ],
     "guarantee_offset": {
         "total_offset": 50000.00,
         "unused_guarantee": 0.00,
-        "offset_details": [{"period": 36, "offset_amount": 31336.37, "remaining_payment": 0.00}],
+        "offset_details": [
+            {"period": 36, "offset_amount": 31336.37, "remaining_payment": 0.00}
+        ],
     },
 }
 
@@ -34,7 +42,9 @@ def test_incomplete_export():
     # 测试Excel导出
     print("\n📊 测试Excel导出（不完整数据）...")
     response = requests.post(
-        "http://127.0.0.1:5002/api/export/excel", json=incomplete_data, headers={"Content-Type": "application/json"}
+        "http://127.0.0.1:5002/api/export/excel",
+        json=incomplete_data,
+        headers={"Content-Type": "application/json"},
     )
 
     if response.status_code == 200:
@@ -48,7 +58,9 @@ def test_incomplete_export():
     # 测试JSON导出
     print("\n📄 测试JSON导出（不完整数据）...")
     response = requests.post(
-        "http://127.0.0.1:5002/api/export/json", json=incomplete_data, headers={"Content-Type": "application/json"}
+        "http://127.0.0.1:5002/api/export/json",
+        json=incomplete_data,
+        headers={"Content-Type": "application/json"},
     )
 
     if response.status_code == 200:

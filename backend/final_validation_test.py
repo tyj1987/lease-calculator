@@ -26,7 +26,9 @@ def test_calculation_method(method_name, method_key, description):
 
     # 调用计算API
     response = requests.post(
-        "http://127.0.0.1:5002/api/calculate", json=calc_data, headers={"Content-Type": "application/json"}
+        "http://127.0.0.1:5002/api/calculate",
+        json=calc_data,
+        headers={"Content-Type": "application/json"},
     )
 
     if response.status_code == 200:
@@ -36,7 +38,9 @@ def test_calculation_method(method_name, method_key, description):
 
         # 导出Excel
         excel_response = requests.post(
-            "http://127.0.0.1:5002/api/export/excel", json=calc_result, headers={"Content-Type": "application/json"}
+            "http://127.0.0.1:5002/api/export/excel",
+            json=calc_result,
+            headers={"Content-Type": "application/json"},
         )
 
         if excel_response.status_code == 200:
@@ -65,7 +69,9 @@ def test_calculation_method(method_name, method_key, description):
 
         # 导出JSON
         json_response = requests.post(
-            "http://127.0.0.1:5002/api/export/json", json=calc_result, headers={"Content-Type": "application/json"}
+            "http://127.0.0.1:5002/api/export/json",
+            json=calc_result,
+            headers={"Content-Type": "application/json"},
         )
 
         if json_response.status_code == 200:
