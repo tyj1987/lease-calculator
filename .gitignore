@@ -226,7 +226,7 @@ Desktop.ini
 # 项目特定文件
 *.pid
 *.xlsx
-*.json
+# *.json  # 允许必要的配置文件
 logs/*.log
 uploads/
 downloads/
@@ -237,6 +237,11 @@ tmp/
 test_*.xlsx
 test_*.json
 *_test_export.*
+
+# 排除重要的配置文件
+!frontend/asset-manifest.json
+!package.json
+!pyproject.toml
 
 # 部署相关
 deployment/
