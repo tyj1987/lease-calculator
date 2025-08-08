@@ -66,8 +66,8 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         cd backend
-        pip install -r requirements.txt
-        pip install pytest pytest-cov
+        pip install -r requirements-full-prod.txt
+        pip install pytest pytest-cov pytest-mock coverage black flake8 isort
     
     - name: Run unit tests with pytest
       run: |
@@ -151,7 +151,7 @@ jobs:
     - name: Check for known security vulnerabilities
       run: |
         cd backend
-        safety check -r requirements.txt
+        safety check -r requirements-full-prod.txt
 
   build-docker:
     name: Build Docker Image
@@ -234,7 +234,8 @@ jobs:
     - name: Start application
       run: |
         cd backend
-        pip install -r requirements.txt
+        pip install -r requirements-full-prod.txt
+        pip install locust  # 单独安装性能测试工具
         python app.py &
         sleep 10
         
