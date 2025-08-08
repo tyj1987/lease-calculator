@@ -207,7 +207,7 @@ def calculate_lease():
             data = request.get_json()
         except BadRequest:
             return jsonify({"error": "请求体不是有效的JSON格式"}), 400
-            
+
         if data is None:
             return jsonify({"error": "请求体不是有效的JSON格式"}), 400
 
@@ -267,7 +267,6 @@ def calculate_lease():
             "guarantee": guarantee,
             "guarantee_mode": guarantee_mode,
         }
-
 
         return jsonify({"status": "success", "data": result, "timestamp": datetime.now().isoformat()})
     except Exception as e:
@@ -870,8 +869,9 @@ def reverse_calculate():
         return jsonify({"status": "error", "message": str(ve), "timestamp": datetime.now().isoformat()}), 400
     except Exception as e:
         return jsonify({"status": "error", "message": str(e), "timestamp": datetime.now().isoformat()}), 500
-# 全局JSON解析错误处理
 
+
+# 全局JSON解析错误处理
 
 
 @app.route("/health", methods=["GET"])
@@ -892,6 +892,7 @@ def serve_index():
         # 替换为大写DOCTYPE
         html = html.replace("<!doctype html>", "<!DOCTYPE html>")
         from flask import Response
+
         return Response(html, mimetype="text/html")
     return "前端页面不存在", 404
 
@@ -936,11 +937,11 @@ def serve_spa_routes(path):
     return send_file(os.path.join(FRONTEND_BUILD_DIR, "index.html"))
 
 
-
 # 捕获无效JSON等BadRequest异常，返回400
 @app.errorhandler(BadRequest)
 def handle_bad_request(e):
     return jsonify({"error": "Invalid JSON or bad request"}), 400
+
 
 # 捕获所有其他异常，优先处理HTTPException
 @app.errorhandler(Exception)
@@ -949,6 +950,7 @@ def handle_exception(e):
         return jsonify({"error": e.description}), e.code
     app.logger.error("Server Error: %s", (e))
     return jsonify({"error": "Internal server error"}), 500
+
 
 @app.errorhandler(404)
 def not_found(error):
@@ -964,6 +966,7 @@ def handle_bad_request(e):
 
 if __name__ == "__main__":
     import os
+
     port = int(os.environ.get("PORT", 5002))
     debug = os.environ.get("FLASK_ENV") != "production"
     app.run(debug=debug, host="0.0.0.0", port=port)
