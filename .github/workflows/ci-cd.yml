@@ -297,15 +297,20 @@ jobs:
           echo "更新测试代码..."
           git pull origin main
           
+          echo "检查Docker环境..."
+          docker --version
+          docker compose version
+          
           echo "停止测试服务..."
-          docker-compose -f docker-compose.test.yml down || true
+          docker compose -f docker-compose.test.yml down || true
           
           echo "拉取最新镜像..."
           docker pull ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }}
           
           echo "启动测试服务..."
           export IMAGE_TAG=main-${{ github.sha }}
-          docker-compose -f docker-compose.test.yml up -d
+          export DOCKER_IMAGE=${{ env.DOCKER_IMAGE }}
+          docker compose -f docker-compose.test.yml up -d
           
           echo "验证测试部署..."
           sleep 10
@@ -349,7 +354,7 @@ jobs:
           docker tag ${{ env.DOCKER_IMAGE }}:latest ${{ env.DOCKER_IMAGE }}:backup-$(date +%Y%m%d-%H%M%S) || true
           
           echo "停止生产服务..."
-          docker-compose down
+          docker compose down
           
           echo "拉取最新镜像..."
           docker pull ${{ env.DOCKER_IMAGE }}:latest
@@ -357,7 +362,8 @@ jobs:
           
           echo "启动生产服务..."
           export IMAGE_TAG=latest
-          docker-compose up -d
+          export DOCKER_IMAGE=${{ env.DOCKER_IMAGE }}
+          docker compose up -d
           
           echo "等待服务启动..."
           sleep 15
