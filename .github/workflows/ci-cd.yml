@@ -279,6 +279,16 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Transfer deployment files to test server
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ env.TEST_HOST }}
+        username: root
+        password: ${{ secrets.TEST_SSH_PASSWORD }}
+        port: 22
+        source: "docker-compose.yml,docker-compose.test.yml"
+        target: "/opt/lease-calculator-test/"
+    
     - name: Deploy to test server
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -288,12 +298,8 @@ jobs:
         port: 22
         script: |
           echo "准备测试目录..."
-          rm -rf /opt/lease-calculator-test
           mkdir -p /opt/lease-calculator-test
           cd /opt/lease-calculator-test
-          
-          echo "下载最新代码..."
-          git clone https://github.com/tyj1987/lease-calculator.git .
           
           echo "验证配置文件..."
           ls -la docker-compose.yml
@@ -341,6 +347,25 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Prepare deployment files
+      run: |
+        mkdir -p /tmp/deploy
+        cp docker-compose.yml /tmp/deploy/
+        cp docker-compose.test.yml /tmp/deploy/
+        cp -r config /tmp/deploy/ || echo "No config directory"
+        echo "准备的部署文件："
+        ls -la /tmp/deploy/
+    
+    - name: Transfer deployment files
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ env.PRODUCTION_HOST }}
+        username: root
+        password: ${{ secrets.PROD_SSH_PASSWORD }}
+        port: 22
+        source: "docker-compose.yml,docker-compose.test.yml"
+        target: "/opt/lease-calculator/"
+        
     - name: Deploy to production server
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -350,12 +375,8 @@ jobs:
         port: 22
         script: |
           echo "准备生产目录..."
-          rm -rf /opt/lease-calculator
           mkdir -p /opt/lease-calculator
           cd /opt/lease-calculator
-          
-          echo "下载最新代码..."
-          git clone https://github.com/tyj1987/lease-calculator.git .
           
           echo "验证配置文件..."
           ls -la docker-compose.yml
