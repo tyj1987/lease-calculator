@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  lease-calculator-test:
+    image: ${DOCKER_IMAGE:-tuoyongjun1987/lease-calculator}:${IMAGE_TAG:-latest}
+    container_name: lease-calculator-test
+    ports:
+      - "8080:5002"
+    environment:
+      - FLASK_ENV=testing
+      - PORT=5002
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx-test:
+    image: nginx:alpine
+    container_name: nginx-test
+    ports:
+      - "8081:80"
+    volumes:
+      - ./config/nginx.test.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - lease-calculator-test
+    restart: unless-stopped
+
+networks:
+  default:
+    name: lease-calculator-test-network

@@ -48,6 +48,42 @@ coverage.xml
 *.cover
 *.py,cover
 .hypothesis/
+
+# 项目特定的忽略文件
+# Windows文件
+*.Zone.Identifier
+.user.ini
+.htaccess
+
+# 临时和日志文件
+logs/
+*.log
+bandit-report.json
+
+# 安装脚本（非必需）
+install-*.sh
+setup-*.sh
+optimize.sh
+quick-deploy.sh
+simple-install.sh
+start.sh
+stop.sh
+ultra-simple-install.sh
+verify.sh
+
+# 临时文档
+项目状态报告.md
+
+# IDE和编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 系统文件
+.DS_Store
+Thumbs.db
 .pytest_cache/
 cover/
 

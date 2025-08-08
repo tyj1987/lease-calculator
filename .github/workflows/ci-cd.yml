@@ -3,12 +3,51 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ main, develop ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Deploy to production'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.10'
+  DOCKER_IMAGE: tuoyongjun1987/lease-calculator
+  PRODUCTION_HOST: 47.94.225.76
+  TEST_HOST: 192.168.2.8
 
 jobs:
+  # 前端检查 (静态文件验证)
+  frontend-check:
+    name: Frontend Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Validate frontend assets
+      run: |
+        echo "✅ 检查前端静态文件..."
+        if [ ! -f "frontend/index.html" ]; then
+          echo "❌ frontend/index.html 不存在"
+          exit 1
+        fi
+        if [ ! -f "frontend/asset-manifest.json" ]; then
+          echo "❌ frontend/asset-manifest.json 不存在"
+          exit 1
+        fi
+        if [ ! -d "frontend/static" ]; then
+          echo "❌ frontend/static 目录不存在"
+          exit 1
+        fi
+        echo "✅ 前端静态文件验证通过"
+
   test:
-    name: Run Tests
+    name: Backend Tests
     runs-on: ubuntu-latest
     
     strategy:
@@ -30,10 +69,20 @@ jobs:
         pip install -r requirements.txt
         pip install pytest pytest-cov
     
-    - name: Run tests with pytest
+    - name: Run unit tests with pytest
       run: |
         cd backend
-        python -m pytest tests/ -v --cov=. --cov-report=xml
+        python -m pytest tests/ -v --cov=. --cov-report=xml --cov-report=html
+    
+    - name: Run integration tests
+      run: |
+        cd backend
+        python -m pytest test_complete_flow.py -v
+    
+    - name: Test realistic data scenarios
+      run: |
+        cd backend
+        python test_realistic_data.py
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -105,7 +154,7 @@ jobs:
   build-docker:
     name: Build Docker Image
     runs-on: ubuntu-latest
-    needs: [test, lint, security]
+    needs: [frontend-check, test, lint, security]
     
     steps:
     - uses: actions/checkout@v4
@@ -116,7 +165,7 @@ jobs:
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        username: tuoyongjun1987
         password: ${{ secrets.DOCKERHUB_TOKEN }}
       if: github.event_name != 'pull_request'
     
@@ -124,12 +173,14 @@ jobs:
       id: meta
       uses: docker/metadata-action@v5
       with:
-        images: your-dockerhub-username/lease-calculator
+        images: ${{ env.DOCKER_IMAGE }}
         tags: |
           type=ref,event=branch
           type=ref,event=pr
           type=sha,prefix={{branch}}-
           type=raw,value=latest,enable={{is_default_branch}}
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
     
     - name: Build and push Docker image
       uses: docker/build-push-action@v5
@@ -141,27 +192,192 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        
+    - name: Image vulnerability scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.DOCKER_IMAGE }}:latest
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+      if: github.event_name != 'pull_request'
+        
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+      if: github.event_name != 'pull_request'
+
+  # 性能测试
+  performance-test:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: [build-docker]
+    if: github.event_name != 'pull_request'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Install dependencies
+      run: |
+        pip install locust requests
+        
+    - name: Start application
+      run: |
+        cd backend
+        pip install -r requirements.txt
+        python app.py &
+        sleep 10
+        
+    - name: Run performance tests
+      run: |
+        echo "from locust import HttpUser, task, between
+        
+        class WebsiteUser(HttpUser):
+            wait_time = between(1, 3)
+            host = 'http://localhost:5002'
+            
+            @task
+            def test_health(self):
+                self.client.get('/api/health')
+                
+            @task(3)
+            def test_calculate(self):
+                self.client.post('/api/calculate', json={
+                    'method': 'equal_annuity',
+                    'pv': 1000000,
+                    'annual_rate': 0.08,
+                    'periods': 36,
+                    'frequency': 12
+                })" > locustfile.py
+        
+        locust --headless -u 10 -r 2 -t 30s --html performance-report.html
+        
+    - name: Upload performance report
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-report
+        path: performance-report.html
+
+  # 测试环境部署
+  deploy-test:
+    name: Deploy to Test Environment
+    runs-on: ubuntu-latest
+    needs: [build-docker]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    environment: test
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Deploy to test server
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ env.TEST_HOST }}
+        username: root
+        password: ${{ secrets.TEST_SSH_PASSWORD }}
+        port: 22
+        script: |
+          cd /opt/lease-calculator-test || {
+            echo "创建测试目录..."
+            mkdir -p /opt/lease-calculator-test
+            cd /opt/lease-calculator-test
+            git clone https://github.com/tyj1987/lease-calculator.git .
+          }
+          
+          echo "更新测试代码..."
+          git pull origin develop
+          
+          echo "停止测试服务..."
+          docker-compose -f docker-compose.test.yml down || true
+          
+          echo "拉取最新镜像..."
+          docker pull ${{ env.DOCKER_IMAGE }}:develop-${{ github.sha }}
+          
+          echo "启动测试服务..."
+          export IMAGE_TAG=develop-${{ github.sha }}
+          docker-compose -f docker-compose.test.yml up -d
+          
+          echo "验证测试部署..."
+          sleep 10
+          curl -f http://localhost:8080/api/health || {
+            echo "测试环境健康检查失败"
+            docker-compose -f docker-compose.test.yml logs
+            exit 1
+          }
+          
+          echo "✅ 测试环境部署成功"
 
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [build-docker]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [build-docker, performance-test]
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event.inputs.deploy == 'true'
     environment: production
     
     steps:
     - uses: actions/checkout@v4
     
-    - name: Deploy to server
+    - name: Deploy to production server
       uses: appleboy/ssh-action@v1.0.0
       with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.PRIVATE_KEY }}
-        port: ${{ secrets.PORT }}
+        host: ${{ env.PRODUCTION_HOST }}
+        username: root
+        password: ${{ secrets.PROD_SSH_PASSWORD }}
+        port: 22
         script: |
-          cd /opt/lease-calculator
-          docker-compose pull
+          cd /opt/lease-calculator || {
+            echo "创建生产目录..."
+            mkdir -p /opt/lease-calculator
+            cd /opt/lease-calculator
+            git clone https://github.com/tyj1987/lease-calculator.git .
+          }
+          
+          echo "更新生产代码..."
+          git pull origin main
+          
+          echo "备份当前运行的容器..."
+          docker tag ${{ env.DOCKER_IMAGE }}:latest ${{ env.DOCKER_IMAGE }}:backup-$(date +%Y%m%d-%H%M%S) || true
+          
+          echo "停止生产服务..."
           docker-compose down
+          
+          echo "拉取最新镜像..."
+          docker pull ${{ env.DOCKER_IMAGE }}:latest
+          
+          echo "启动生产服务..."
           docker-compose up -d
-          docker system prune -f
+          
+          echo "等待服务启动..."
+          sleep 15
+          
+          echo "验证生产部署..."
+          curl -f http://localhost/api/health || {
+            echo "生产环境健康检查失败，回滚..."
+            docker-compose down
+            docker tag ${{ env.DOCKER_IMAGE }}:backup-$(date +%Y%m%d-%H%M%S) ${{ env.DOCKER_IMAGE }}:latest || true
+            docker-compose up -d
+            exit 1
+          }
+          
+          echo "清理旧镜像..."
+          docker system prune -f --filter "until=24h"
+          
+          echo "✅ 生产环境部署成功"
+      
+    - name: Notification
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        text: |
+          🚀 部署状态: ${{ job.status }}
+          📦 分支: ${{ github.ref_name }}
+          👤 提交者: ${{ github.actor }}
+          🔗 链接: ${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      if: always() && env.SLACK_WEBHOOK_URL != ''

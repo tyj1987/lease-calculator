@@ -54,7 +54,7 @@
 
 ```bash
 # 下载项目
-git clone https://github.com/your-username/lease-calculator.git
+git clone https://github.com/tyj1987/lease-calculator.git
 cd lease-calculator
 
 # 运行一键部署脚本
@@ -66,7 +66,7 @@ chmod +x deploy.sh
 
 #### 1. 克隆项目
 ```bash
-git clone https://github.com/your-username/lease-calculator.git
+git clone https://github.com/tyj1987/lease-calculator.git
 cd lease-calculator
 ```
 
@@ -94,14 +94,32 @@ python app.py
 
 ```bash
 # 克隆项目
-git clone https://github.com/your-username/lease-calculator.git
+git clone https://github.com/tyj1987/lease-calculator.git
 cd lease-calculator
 
+# 快速部署
+chmod +x scripts/docker-deploy.sh
+./scripts/docker-deploy.sh
+```
+
+或者手动部署:
+
+```bash
 # 启动服务
 docker-compose up -d
 
 # 查看服务状态
 docker-compose ps
+```
+
+### 使用预构建镜像
+
+```bash
+# 直接使用Docker Hub镜像
+docker run -d -p 5002:5002 --name lease-calc tuoyongjun1987/lease-calculator:latest
+
+# 查看日志
+docker logs lease-calc
 ```
 
 ### 使用Docker
@@ -129,7 +147,7 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y python3 python3-pip python3-venv git nginx
 
 # 克隆项目
-git clone https://github.com/your-username/lease-calculator.git
+git clone https://github.com/tyj1987/lease-calculator.git
 cd lease-calculator
 
 # 运行Ubuntu部署脚本
@@ -147,7 +165,7 @@ sudo yum update -y
 sudo yum install -y python3 python3-pip git nginx
 
 # 克隆项目
-git clone https://github.com/your-username/lease-calculator.git
+git clone https://github.com/tyj1987/lease-calculator.git
 cd lease-calculator
 
 # 运行CentOS部署脚本  
@@ -165,7 +183,7 @@ sudo pacman -Syu
 sudo pacman -S python python-pip git nginx
 
 # 克隆项目
-git clone https://github.com/your-username/lease-calculator.git
+git clone https://github.com/tyj1987/lease-calculator.git
 cd lease-calculator  
 
 # 运行Arch部署脚本
@@ -370,9 +388,9 @@ sudo tail -f /var/log/nginx/error.log
 
 ## 📞 联系方式
 
-- 项目维护者: [脱永军]
-- 邮箱: your.email@example.com
-- 项目地址: https://github.com/your-username/lease-calculator
+- 项目维护者: tyj1987
+- 邮箱: tuoyongjun1987@qq.com
+- 项目地址: https://github.com/tyj1987/lease-calculator
 
 ## 🙏 致谢
 

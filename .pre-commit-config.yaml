@@ -1,0 +1,49 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-json
+      - id: check-merge-conflict
+      - id: debug-statements
+      - id: check-docstring-first
+
+  - repo: https://github.com/psf/black
+    rev: 23.3.0
+    hooks:
+      - id: black
+        language_version: python3
+        files: ^backend/.*\.py$
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.12.0
+    hooks:
+      - id: isort
+        files: ^backend/.*\.py$
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 6.0.0
+    hooks:
+      - id: flake8
+        files: ^backend/.*\.py$
+        args: [--max-line-length=127]
+
+  - repo: https://github.com/pycqa/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        files: ^backend/.*\.py$
+        args: [-r, -f, json, -o, bandit-report.json]
+        always_run: false
+
+  - repo: local
+    hooks:
+      - id: pytest-check
+        name: pytest-check
+        entry: bash -c 'cd backend && python -m pytest ../tests/ --maxfail=1'
+        language: system
+        pass_filenames: false
+        always_run: true

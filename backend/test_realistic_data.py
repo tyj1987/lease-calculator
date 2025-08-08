@@ -20,54 +20,56 @@ realistic_data = {
         {"period": 3, "payment": 31336.37, "principal": 24999.73, "interest": 6336.64, "remaining_balance": 925496.40},
         # ... 这里应该有36期的完整数据，为简化只显示前几期
         {"period": 35, "payment": 31336.37, "principal": 30922.69, "interest": 413.68, "remaining_balance": 31128.67},
-        {"period": 36, "payment": 31336.37, "principal": 31128.67, "interest": 207.70, "remaining_balance": 0.0}
+        {"period": 36, "payment": 31336.37, "principal": 31128.67, "interest": 207.70, "remaining_balance": 0.0},
     ],
     "guarantee_offset": {
         "total_offset": 50000.0,
         "unused_guarantee": 0.0,
         "offset_details": [
             {"period": 36, "offset_amount": 31336.37, "remaining_payment": 0.00},
-            {"period": 35, "offset_amount": 18663.63, "remaining_payment": 12672.74}
-        ]
-    }
+            {"period": 35, "offset_amount": 18663.63, "remaining_payment": 12672.74},
+        ],
+    },
 }
+
 
 def test_realistic_export():
     """测试真实数据的导出"""
     print("📊 测试Excel导出（真实数据）...")
-    response = requests.post('http://127.0.0.1:5002/api/export/excel',
-                           json=realistic_data,
-                           headers={'Content-Type': 'application/json'})
-    
+    response = requests.post(
+        "http://127.0.0.1:5002/api/export/excel", json=realistic_data, headers={"Content-Type": "application/json"}
+    )
+
     if response.status_code == 200:
         print("✅ Excel导出成功")
-        with open('realistic_test_export.xlsx', 'wb') as f:
+        with open("realistic_test_export.xlsx", "wb") as f:
             f.write(response.content)
         print("✅ 文件保存为 realistic_test_export.xlsx")
     else:
         print(f"❌ Excel导出失败: {response.text}")
-    
+
     print("\n📄 测试JSON导出（真实数据）...")
-    response = requests.post('http://127.0.0.1:5002/api/export/json',
-                           json=realistic_data,
-                           headers={'Content-Type': 'application/json'})
-    
+    response = requests.post(
+        "http://127.0.0.1:5002/api/export/json", json=realistic_data, headers={"Content-Type": "application/json"}
+    )
+
     if response.status_code == 200:
         print("✅ JSON导出成功")
-        with open('realistic_test_export.json', 'wb') as f:
+        with open("realistic_test_export.json", "wb") as f:
             f.write(response.content)
-        
+
         try:
-            json_content = json.loads(response.content.decode('utf-8'))
+            json_content = json.loads(response.content.decode("utf-8"))
             print("✅ JSON内容预览:")
-            print("基本信息:", json_content.get('基本信息', {}))
-            print("计算结果:", json_content.get('计算结果', {}))
-            schedule_count = len(json_content.get('详细数据', {}).get('还款计划表', []))
+            print("基本信息:", json_content.get("基本信息", {}))
+            print("计算结果:", json_content.get("计算结果", {}))
+            schedule_count = len(json_content.get("详细数据", {}).get("还款计划表", []))
             print(f"还款计划表: 共{schedule_count}期数据")
         except Exception as e:
             print(f"❌ JSON解析失败: {e}")
     else:
         print(f"❌ JSON导出失败: {response.text}")
+
 
 if __name__ == "__main__":
     print("🚀 测试真实数据的参数推导")
