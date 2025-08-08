@@ -18,7 +18,7 @@ env:
   PYTHON_VERSION: '3.10'
   DOCKER_IMAGE: tuoyongjun1987/lease-calculator
   PRODUCTION_HOST: 47.94.225.76
-  TEST_HOST: 192.168.2.8
+  TEST_HOST: ddns.52trz.com
 
 jobs:
   # 前端检查 (静态文件验证)
@@ -353,8 +353,10 @@ jobs:
           
           echo "拉取最新镜像..."
           docker pull ${{ env.DOCKER_IMAGE }}:latest
+          docker pull ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }}
           
           echo "启动生产服务..."
+          export IMAGE_TAG=latest
           docker-compose up -d
           
           echo "等待服务启动..."

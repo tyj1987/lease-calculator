@@ -2,7 +2,8 @@ version: '3.8'
 
 services:
   lease-calculator:
-    build: .
+    image: ${DOCKER_IMAGE:-tuoyongjun1987/lease-calculator}:${IMAGE_TAG:-latest}
+    container_name: lease-calculator-prod
     ports:
       - "5002:5002"
     environment:
