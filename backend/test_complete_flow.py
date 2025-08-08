@@ -4,8 +4,9 @@
 通过实际API调用获得完整数据并测试导出
 """
 
-import requests
 import json
+
+import requests
 
 
 def test_complete_calculation_flow():
@@ -23,9 +24,7 @@ def test_complete_calculation_flow():
         "method": "equal_annuity",  # 等额年金法
     }
 
-    print(
-        f"📋 计算参数: 本金¥{calc_data['pv']:,}, 利率{calc_data['annual_rate']:.1%}, {calc_data['periods']}期"
-    )
+    print(f"📋 计算参数: 本金¥{calc_data['pv']:,}, 利率{calc_data['annual_rate']:.1%}, {calc_data['periods']}期")
 
     # 调用计算API
     response = requests.post(

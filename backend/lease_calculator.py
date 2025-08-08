@@ -3,12 +3,13 @@
 实现等额年金法、等额本金法、平息法、浮动利率法等核心算法
 """
 
-from decimal import Decimal, getcontext, DivisionByZero
+import math
+from datetime import datetime, timedelta
+from decimal import Decimal, DivisionByZero, getcontext
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Tuple, Optional
-from datetime import datetime, timedelta
-import math
 
 # 导入numpy_financial
 try:
@@ -26,9 +27,7 @@ class LeaseCalculator:
     def __init__(self):
         self.precision = Decimal("0.01")  # 精度到分
 
-    def _validate_parameters(
-        self, pv: float, annual_rate: float, periods: int, frequency: int
-    ):
+    def _validate_parameters(self, pv: float, annual_rate: float, periods: int, frequency: int):
         """验证输入参数"""
         if pv <= 0:
             raise ValueError("租赁本金必须大于0")
@@ -39,9 +38,7 @@ class LeaseCalculator:
         if frequency <= 0:
             raise ValueError("年付次数必须大于0")
 
-    def equal_annuity_method(
-        self, pv: float, annual_rate: float, periods: int, frequency: int = 12
-    ) -> Dict:
+    def equal_annuity_method(self, pv: float, annual_rate: float, periods: int, frequency: int = 12) -> Dict:
         """
         等额年金法（等额本息法）
 
@@ -110,9 +107,7 @@ class LeaseCalculator:
             "schedule": schedule,
         }
 
-    def equal_principal_method(
-        self, pv: float, annual_rate: float, periods: int, frequency: int = 12
-    ) -> Dict:
+    def equal_principal_method(self, pv: float, annual_rate: float, periods: int, frequency: int = 12) -> Dict:
         """
         等额本金法
 
@@ -168,9 +163,7 @@ class LeaseCalculator:
             "schedule": schedule,
         }
 
-    def flat_rate_method(
-        self, pv: float, flat_rate: float, years: float, frequency: int = 12
-    ) -> Dict:
+    def flat_rate_method(self, pv: float, flat_rate: float, years: float, frequency: int = 12) -> Dict:
         """
         平息法计算
 
@@ -250,10 +243,7 @@ class LeaseCalculator:
         total_payment = Decimal("0")
 
         # 创建利率变化映射
-        rate_changes = {
-            item["period"]: Decimal(str(item["new_rate"]))
-            for item in rate_reset_schedule
-        }
+        rate_changes = {item["period"]: Decimal(str(item["new_rate"])) for item in rate_reset_schedule}
 
         period = 1
         while period <= periods and remaining_balance > 0:
@@ -351,9 +341,7 @@ class LeaseCalculator:
             return sum(cf / (1 + rate) ** i for i, cf in enumerate(cash_flows))
 
         def npv_derivative(rate):
-            return sum(
-                -i * cf / (1 + rate) ** (i + 1) for i, cf in enumerate(cash_flows)
-            )
+            return sum(-i * cf / (1 + rate) ** (i + 1) for i, cf in enumerate(cash_flows))
 
         rate = 0.1  # 初始猜测
 
@@ -372,9 +360,7 @@ class LeaseCalculator:
         annual_irr = (1 + rate) ** frequency - 1
         return round(annual_irr, 6)
 
-    def apply_guarantee_offset(
-        self, schedule: List[Dict], guarantee: float, mode: str = "尾期冲抵"
-    ) -> Dict:
+    def apply_guarantee_offset(self, schedule: List[Dict], guarantee: float, mode: str = "尾期冲抵") -> Dict:
         """
         保证金冲抵处理
 
@@ -405,9 +391,7 @@ class LeaseCalculator:
                     modified_schedule[i]["payment"] = 0.0
                 else:
                     offset_amount = remaining_guarantee
-                    modified_schedule[i]["payment"] = float(
-                        original_payment - remaining_guarantee
-                    )
+                    modified_schedule[i]["payment"] = float(original_payment - remaining_guarantee)
                     remaining_guarantee = Decimal("0")
 
                 if offset_amount > 0:
@@ -428,9 +412,7 @@ class LeaseCalculator:
                 original_payment = Decimal(str(payment_info["payment"]))
                 offset_amount = min(avg_offset, original_payment)
 
-                modified_schedule[i]["payment"] = float(
-                    original_payment - offset_amount
-                )
+                modified_schedule[i]["payment"] = float(original_payment - offset_amount)
                 remaining_guarantee -= offset_amount
 
                 if offset_amount > 0:
@@ -456,9 +438,7 @@ class LeaseCalculator:
                     modified_schedule[i]["payment"] = 0.0
                 else:
                     offset_amount = remaining_guarantee
-                    modified_schedule[i]["payment"] = float(
-                        original_payment - remaining_guarantee
-                    )
+                    modified_schedule[i]["payment"] = float(original_payment - remaining_guarantee)
                     remaining_guarantee = Decimal("0")
 
                 if offset_amount > 0:
@@ -513,8 +493,7 @@ class LeaseCalculator:
                 try:
                     result = self.equal_annuity_method(**modified_params)
                     irr = self.calculate_irr(
-                        [-modified_params["pv"]]
-                        + [result["pmt"]] * modified_params["periods"],
+                        [-modified_params["pv"]] + [result["pmt"]] * modified_params["periods"],
                         modified_params["frequency"],
                     )
 
@@ -523,18 +502,12 @@ class LeaseCalculator:
                             "param_value": variation,
                             "pmt": result["pmt"],
                             "irr": irr,
-                            "pmt_change_pct": (result["pmt"] - base_result["pmt"])
-                            / base_result["pmt"]
-                            * 100,
-                            "irr_change_pct": (irr - base_irr) / base_irr * 100
-                            if base_irr != 0
-                            else 0,
+                            "pmt_change_pct": (result["pmt"] - base_result["pmt"]) / base_result["pmt"] * 100,
+                            "irr_change_pct": (irr - base_irr) / base_irr * 100 if base_irr != 0 else 0,
                         }
                     )
                 except Exception as e:
-                    results[param_name].append(
-                        {"param_value": variation, "error": str(e)}
-                    )
+                    results[param_name].append({"param_value": variation, "error": str(e)})
 
         return {
             "base_result": {"pmt": base_result["pmt"], "irr": base_irr},
@@ -582,9 +555,7 @@ class LeaseCalculator:
             elif method == "equal_principal":
                 result = self.equal_principal_method(pv, test_rate, periods, frequency)
                 # 等额本金法取平均租金
-                calculated_pmt = (
-                    sum(item["payment"] for item in result["schedule"]) / periods
-                )
+                calculated_pmt = sum(item["payment"] for item in result["schedule"]) / periods
             elif method == "flat_rate":
                 years = periods / frequency
                 result = self.flat_rate_method(pv, test_rate, years, frequency)
@@ -608,9 +579,7 @@ class LeaseCalculator:
         if method == "equal_annuity":
             final_result = self.equal_annuity_method(pv, test_rate, periods, frequency)
         elif method == "equal_principal":
-            final_result = self.equal_principal_method(
-                pv, test_rate, periods, frequency
-            )
+            final_result = self.equal_principal_method(pv, test_rate, periods, frequency)
         elif method == "flat_rate":
             years = periods / frequency
             final_result = self.flat_rate_method(pv, test_rate, years, frequency)

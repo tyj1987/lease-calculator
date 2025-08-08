@@ -3,32 +3,32 @@ Flask API服务器
 提供融资租赁计算的RESTful API接口
 """
 
-import os
-from flask import Flask, request, jsonify, send_file
-from werkzeug.exceptions import BadRequest, HTTPException
-from flask_cors import CORS
-import json
-import io
 import base64
+import io
+import json
+import os
 from datetime import datetime
-import pandas as pd
+
 import matplotlib
+import pandas as pd
+from flask import Flask, jsonify, request, send_file
+from flask_cors import CORS
+from werkzeug.exceptions import BadRequest, HTTPException
 
 matplotlib.use("Agg")  # 使用非GUI后端
-import matplotlib.pyplot as plt
-import seaborn as sns
-import plotly.graph_objects as go
-import plotly.express as px
-from plotly.utils import PlotlyJSONEncoder
 import logging
 from logging.handlers import RotatingFileHandler
+
+import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
+import seaborn as sns
+from plotly.utils import PlotlyJSONEncoder
 
 from lease_calculator import LeaseCalculator
 
 # 设置前端构建目录
-FRONTEND_BUILD_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "../frontend")
-)
+FRONTEND_BUILD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend"))
 
 app = Flask(__name__, static_folder=FRONTEND_BUILD_DIR, static_url_path="")
 CORS(app)  # 允许跨域请求
@@ -37,14 +37,8 @@ CORS(app)  # 允许跨域请求
 if not app.debug:
     if not os.path.exists("logs"):
         os.mkdir("logs")
-    file_handler = RotatingFileHandler(
-        "logs/lease-calculator.log", maxBytes=10240000, backupCount=10
-    )
-    file_handler.setFormatter(
-        logging.Formatter(
-            "%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]"
-        )
-    )
+    file_handler = RotatingFileHandler("logs/lease-calculator.log", maxBytes=10240000, backupCount=10)
+    file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]"))
     file_handler.setLevel(logging.INFO)
     app.logger.addHandler(file_handler)
     app.logger.setLevel(logging.INFO)
@@ -142,9 +136,7 @@ def extract_missing_params(data):
         # 从利息计算推导年利率（粗略估算）
         if len(schedule) > 1 and "pv" in extracted:
             first_interest = schedule[0].get("interest", 0)
-            first_balance = schedule[0].get("remaining_balance", 0) + schedule[0].get(
-                "principal", 0
-            )
+            first_balance = schedule[0].get("remaining_balance", 0) + schedule[0].get("principal", 0)
             if first_balance > 0:
                 monthly_rate = first_interest / first_balance
                 extracted["annual_rate"] = monthly_rate * 12
@@ -246,21 +238,15 @@ def calculate_lease():
 
         try:
             if method == "equal_annuity":
-                result = calculator.equal_annuity_method(
-                    pv, annual_rate, periods, frequency
-                )
+                result = calculator.equal_annuity_method(pv, annual_rate, periods, frequency)
             elif method == "equal_principal":
-                result = calculator.equal_principal_method(
-                    pv, annual_rate, periods, frequency
-                )
+                result = calculator.equal_principal_method(pv, annual_rate, periods, frequency)
             elif method == "flat_rate":
                 years = float(data.get("years", periods / frequency))
                 result = calculator.flat_rate_method(pv, annual_rate, years, frequency)
             elif method == "floating_rate":
                 rate_reset_schedule = data.get("rate_reset_schedule", [])
-                result = calculator.floating_rate_method(
-                    pv, annual_rate, periods, rate_reset_schedule, frequency
-                )
+                result = calculator.floating_rate_method(pv, annual_rate, periods, rate_reset_schedule, frequency)
             else:
                 return jsonify({"error": f"不支持的计算方法: {method}"}), 400
         except (ValueError, TypeError) as e:
@@ -271,9 +257,7 @@ def calculate_lease():
         guarantee_mode = data.get("guarantee_mode", "尾期冲抵")
 
         if guarantee > 0:
-            offset_result = calculator.apply_guarantee_offset(
-                result["schedule"], guarantee, guarantee_mode
-            )
+            offset_result = calculator.apply_guarantee_offset(result["schedule"], guarantee, guarantee_mode)
             result["guarantee_offset"] = offset_result
 
         # 计算IRR
@@ -333,18 +317,12 @@ def sensitivity_analysis_compat():
         # 计算基准值
         base_result = None
         if method == "equal_annuity":
-            base_result = calculator.equal_annuity_method(
-                pv, annual_rate, periods, frequency
-            )
+            base_result = calculator.equal_annuity_method(pv, annual_rate, periods, frequency)
         elif method == "equal_principal":
-            base_result = calculator.equal_principal_method(
-                pv, annual_rate, periods, frequency
-            )
+            base_result = calculator.equal_principal_method(pv, annual_rate, periods, frequency)
         else:
             # 默认使用等额年金法
-            base_result = calculator.equal_annuity_method(
-                pv, annual_rate, periods, frequency
-            )
+            base_result = calculator.equal_annuity_method(pv, annual_rate, periods, frequency)
 
         base_pmt = base_result["pmt"]
 
@@ -368,28 +346,18 @@ def sensitivity_analysis_compat():
             if rate > 0:  # 确保利率为正
                 try:
                     if method == "equal_annuity":
-                        result = calculator.equal_annuity_method(
-                            pv, rate, periods, frequency
-                        )
+                        result = calculator.equal_annuity_method(pv, rate, periods, frequency)
                     else:
-                        result = calculator.equal_principal_method(
-                            pv, rate, periods, frequency
-                        )
+                        result = calculator.equal_principal_method(pv, rate, periods, frequency)
 
                     pmt = result["pmt"]
                     change = rate - annual_rate
                     payment_change = pmt - base_pmt
-                    change_rate = (
-                        (payment_change / base_pmt) * 100 if base_pmt != 0 else 0
-                    )
+                    change_rate = (payment_change / base_pmt) * 100 if base_pmt != 0 else 0
 
                     # 计算敏感度系数：租金变动率 / 利率变动率
-                    rate_change_pct = (
-                        (change / annual_rate) * 100 if annual_rate != 0 else 0
-                    )
-                    sensitivity = (
-                        change_rate / rate_change_pct if rate_change_pct != 0 else 0
-                    )
+                    rate_change_pct = (change / annual_rate) * 100 if annual_rate != 0 else 0
+                    sensitivity = change_rate / rate_change_pct if rate_change_pct != 0 else 0
 
                     sensitivity_analysis.append(
                         {
@@ -416,13 +384,9 @@ def sensitivity_analysis_compat():
         for period in period_scenarios:
             try:
                 if method == "equal_annuity":
-                    result = calculator.equal_annuity_method(
-                        pv, annual_rate, period, frequency
-                    )
+                    result = calculator.equal_annuity_method(pv, annual_rate, period, frequency)
                 else:
-                    result = calculator.equal_principal_method(
-                        pv, annual_rate, period, frequency
-                    )
+                    result = calculator.equal_principal_method(pv, annual_rate, period, frequency)
 
                 pmt = result["pmt"]
                 change = period - periods
@@ -431,9 +395,7 @@ def sensitivity_analysis_compat():
 
                 # 计算敏感度系数
                 period_change_pct = (change / periods) * 100 if periods != 0 else 0
-                sensitivity = (
-                    change_rate / period_change_pct if period_change_pct != 0 else 0
-                )
+                sensitivity = change_rate / period_change_pct if period_change_pct != 0 else 0
 
                 sensitivity_analysis.append(
                     {
@@ -460,13 +422,9 @@ def sensitivity_analysis_compat():
         for pv_test in pv_scenarios:
             try:
                 if method == "equal_annuity":
-                    result = calculator.equal_annuity_method(
-                        pv_test, annual_rate, periods, frequency
-                    )
+                    result = calculator.equal_annuity_method(pv_test, annual_rate, periods, frequency)
                 else:
-                    result = calculator.equal_principal_method(
-                        pv_test, annual_rate, periods, frequency
-                    )
+                    result = calculator.equal_principal_method(pv_test, annual_rate, periods, frequency)
 
                 pmt = result["pmt"]
                 change = pv_test - pv
@@ -557,9 +515,7 @@ def compare_schemes():
             elif method == "flat_rate":
                 # 平息法需要years参数
                 flat_params = base_params.copy()
-                flat_params["years"] = float(
-                    params.get("years", params["periods"] / params.get("frequency", 12))
-                )
+                flat_params["years"] = float(params.get("years", params["periods"] / params.get("frequency", 12)))
                 result = calculator.flat_rate_method(
                     flat_params["pv"],
                     flat_params["annual_rate"],
@@ -574,26 +530,18 @@ def compare_schemes():
             guarantee_mode = params.get("guarantee_mode", "尾期冲抵")
 
             if guarantee > 0 and "schedule" in result:
-                offset_result = calculator.apply_guarantee_offset(
-                    result["schedule"], guarantee, guarantee_mode
-                )
+                offset_result = calculator.apply_guarantee_offset(result["schedule"], guarantee, guarantee_mode)
                 result["guarantee_offset"] = offset_result
 
             # 计算IRR
             if "pmt" in result:
                 # 等额年金法和平息法有固定的pmt
-                cash_flows = [-base_params["pv"]] + [result["pmt"]] * base_params[
-                    "periods"
-                ]
+                cash_flows = [-base_params["pv"]] + [result["pmt"]] * base_params["periods"]
             else:
                 # 等额本金法需要从schedule中提取每期payment
-                cash_flows = [-base_params["pv"]] + [
-                    item["payment"] for item in result["schedule"]
-                ]
+                cash_flows = [-base_params["pv"]] + [item["payment"] for item in result["schedule"]]
 
-            result["irr"] = calculator.calculate_irr(
-                cash_flows, base_params["frequency"]
-            )
+            result["irr"] = calculator.calculate_irr(cash_flows, base_params["frequency"])
             result["scheme_name"] = scheme.get("name", f"方案{i+1}")
             result["method"] = method
 
@@ -763,55 +711,39 @@ def export_to_excel():
 
             # 计算方法
             if "method" in complete_data:
-                method_cn = FIELD_MAPPING.get(
-                    complete_data["method"], complete_data["method"]
-                )
+                method_cn = FIELD_MAPPING.get(complete_data["method"], complete_data["method"])
                 basic_info.append(["计算方法", method_cn])
 
             # 基本参数
             if "pv" in complete_data:
                 basic_info.append(["租赁本金", format_currency(complete_data["pv"])])
             if "annual_rate" in complete_data:
-                basic_info.append(
-                    ["年利率", format_percentage(complete_data["annual_rate"])]
-                )
+                basic_info.append(["年利率", format_percentage(complete_data["annual_rate"])])
             if "periods" in complete_data:
                 basic_info.append(["租赁期限", f"{complete_data['periods']}期"])
             if "frequency" in complete_data:
                 freq_map = {12: "月付", 4: "季付", 2: "半年付", 1: "年付"}
-                freq_text = freq_map.get(
-                    complete_data["frequency"], f"{complete_data['frequency']}次/年"
-                )
+                freq_text = freq_map.get(complete_data["frequency"], f"{complete_data['frequency']}次/年")
                 basic_info.append(["支付频率", freq_text])
 
             # 计算结果
             if "pmt" in complete_data:
                 basic_info.append(["每期租金", format_currency(complete_data["pmt"])])
             if "total_interest" in complete_data:
-                basic_info.append(
-                    ["总利息", format_currency(complete_data["total_interest"])]
-                )
+                basic_info.append(["总利息", format_currency(complete_data["total_interest"])])
             if "total_payment" in complete_data:
-                basic_info.append(
-                    ["总支付额", format_currency(complete_data["total_payment"])]
-                )
+                basic_info.append(["总支付额", format_currency(complete_data["total_payment"])])
             if "irr" in complete_data:
-                basic_info.append(
-                    ["内部收益率(IRR)", format_percentage(complete_data["irr"])]
-                )
+                basic_info.append(["内部收益率(IRR)", format_percentage(complete_data["irr"])])
 
             # 保证金信息
             if "guarantee" in complete_data and complete_data["guarantee"] > 0:
                 basic_info.append(["保证金", format_currency(complete_data["guarantee"])])
             if "guarantee_mode" in complete_data:
-                basic_info.append(
-                    ["保证金处理方式", complete_data.get("guarantee_mode", "尾期冲抵")]
-                )
+                basic_info.append(["保证金处理方式", complete_data.get("guarantee_mode", "尾期冲抵")])
             elif "guarantee_offset" in complete_data:
                 # 从保证金冲抵信息推导处理方式
-                offset_details = complete_data["guarantee_offset"].get(
-                    "offset_details", []
-                )
+                offset_details = complete_data["guarantee_offset"].get("offset_details", [])
                 if offset_details:
                     # 检查冲抵模式：如果最后一期先冲抵，则是尾期冲抵
                     periods = [item["period"] for item in offset_details]
@@ -843,19 +775,14 @@ def export_to_excel():
                 schedule_df.to_excel(writer, sheet_name="还款计划表", index=False)
 
             # 保证金冲抵详情sheet - 使用中文列名
-            if (
-                "guarantee_offset" in complete_data
-                and "offset_details" in complete_data["guarantee_offset"]
-            ):
+            if "guarantee_offset" in complete_data and "offset_details" in complete_data["guarantee_offset"]:
                 offset_data = []
                 for item in complete_data["guarantee_offset"]["offset_details"]:
                     offset_data.append(
                         {
                             "期数": item.get("period", ""),
                             "冲抵金额(元)": format_currency(item.get("offset_amount", 0)),
-                            "冲抵后租金(元)": format_currency(
-                                item.get("remaining_payment", 0)
-                            ),
+                            "冲抵后租金(元)": format_currency(item.get("remaining_payment", 0)),
                         }
                     )
 
@@ -868,26 +795,16 @@ def export_to_excel():
                         ["保证金总额", format_currency(complete_data.get("guarantee", 0))],
                         [
                             "总冲抵金额",
-                            format_currency(
-                                complete_data["guarantee_offset"].get("total_offset", 0)
-                            ),
+                            format_currency(complete_data["guarantee_offset"].get("total_offset", 0)),
                         ],
                         [
                             "未用保证金",
-                            format_currency(
-                                complete_data["guarantee_offset"].get(
-                                    "unused_guarantee", 0
-                                )
-                            ),
+                            format_currency(complete_data["guarantee_offset"].get("unused_guarantee", 0)),
                         ],
                         ["处理方式", complete_data.get("guarantee_mode", "尾期冲抵")],
                     ]
-                    guarantee_summary_df = pd.DataFrame(
-                        guarantee_summary, columns=["项目", "数值"]
-                    )
-                    guarantee_summary_df.to_excel(
-                        writer, sheet_name="保证金汇总", index=False
-                    )
+                    guarantee_summary_df = pd.DataFrame(guarantee_summary, columns=["项目", "数值"])
+                    guarantee_summary_df.to_excel(writer, sheet_name="保证金汇总", index=False)
 
         output.seek(0)
 
@@ -936,9 +853,7 @@ def export_to_json():
 
         # 基本信息
         if "method" in complete_data:
-            method_cn = FIELD_MAPPING.get(
-                complete_data["method"], complete_data["method"]
-            )
+            method_cn = FIELD_MAPPING.get(complete_data["method"], complete_data["method"])
             export_data["基本信息"]["计算方法"] = method_cn
         if "pv" in complete_data:
             export_data["基本信息"]["租赁本金"] = format_currency(complete_data["pv"])
@@ -948,9 +863,7 @@ def export_to_json():
             export_data["基本信息"]["租赁期限"] = f"{complete_data['periods']}期"
         if "frequency" in complete_data:
             freq_map = {12: "月付", 4: "季付", 2: "半年付", 1: "年付"}
-            freq_text = freq_map.get(
-                complete_data["frequency"], f"{complete_data['frequency']}次/年"
-            )
+            freq_text = freq_map.get(complete_data["frequency"], f"{complete_data['frequency']}次/年")
             export_data["基本信息"]["支付频率"] = freq_text
 
         # 保证金信息
@@ -970,19 +883,13 @@ def export_to_json():
         if "pmt" in complete_data:
             export_data["计算结果"]["每期租金"] = format_currency(complete_data["pmt"])
         if "total_interest" in complete_data:
-            export_data["计算结果"]["总利息"] = format_currency(
-                complete_data["total_interest"]
-            )
+            export_data["计算结果"]["总利息"] = format_currency(complete_data["total_interest"])
         if "total_payment" in complete_data:
-            export_data["计算结果"]["总支付额"] = format_currency(
-                complete_data["total_payment"]
-            )
+            export_data["计算结果"]["总支付额"] = format_currency(complete_data["total_payment"])
         if "irr" in complete_data:
             export_data["计算结果"]["内部收益率(IRR)"] = format_percentage(complete_data["irr"])
         if "actual_irr" in complete_data:
-            export_data["计算结果"]["实际年利率"] = format_percentage(
-                complete_data["actual_irr"]
-            )
+            export_data["计算结果"]["实际年利率"] = format_percentage(complete_data["actual_irr"])
         if "flat_rate" in complete_data:
             export_data["计算结果"]["平息年利率"] = format_percentage(complete_data["flat_rate"])
 
@@ -1009,20 +916,13 @@ def export_to_json():
             guarantee_info = {
                 "冲抵汇总": {
                     "保证金总额": format_currency(complete_data.get("guarantee", 0)),
-                    "总冲抵金额": format_currency(
-                        complete_data["guarantee_offset"].get("total_offset", 0)
-                    ),
-                    "未用保证金": format_currency(
-                        complete_data["guarantee_offset"].get("unused_guarantee", 0)
-                    ),
+                    "总冲抵金额": format_currency(complete_data["guarantee_offset"].get("total_offset", 0)),
+                    "未用保证金": format_currency(complete_data["guarantee_offset"].get("unused_guarantee", 0)),
                     "处理方式": complete_data.get("guarantee_mode", "尾期冲抵"),
                 }
             }
 
-            if (
-                "offset_details" in complete_data["guarantee_offset"]
-                and complete_data["guarantee_offset"]["offset_details"]
-            ):
+            if "offset_details" in complete_data["guarantee_offset"] and complete_data["guarantee_offset"]["offset_details"]:
                 offset_list = []
                 for item in complete_data["guarantee_offset"]["offset_details"]:
                     offset_list.append(
@@ -1089,16 +989,12 @@ def reverse_calculate():
         if calculation_type == "find_rate":
             # 根据目标租金推算年利率
             target_pmt = float(data["target_pmt"])
-            result = calculator.reverse_calculate_rate(
-                pv, target_pmt, periods, frequency, method
-            )
+            result = calculator.reverse_calculate_rate(pv, target_pmt, periods, frequency, method)
 
         elif calculation_type == "find_irr":
             # 根据目标IRR推算租金
             target_irr = float(data["target_irr"])
-            result = calculator.reverse_calculate_pmt(
-                pv, target_irr, periods, frequency, method
-            )
+            result = calculator.reverse_calculate_pmt(pv, target_irr, periods, frequency, method)
 
         else:
             return jsonify({"error": f"不支持的计算类型: {calculation_type}"}), 400

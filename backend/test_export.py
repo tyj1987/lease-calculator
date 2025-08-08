@@ -4,8 +4,9 @@
 测试导出功能的脚本
 """
 
-import requests
 import json
+
+import requests
 
 # 测试数据
 test_data = {

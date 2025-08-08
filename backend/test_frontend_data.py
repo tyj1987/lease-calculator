@@ -4,9 +4,10 @@
 测试实际前端传递的导出数据
 """
 
-import requests
 import json
 import time
+
+import requests
 
 # 模拟前端可能传递的不完整数据（这可能是问题所在）
 incomplete_data = {
@@ -26,9 +27,7 @@ incomplete_data = {
     "guarantee_offset": {
         "total_offset": 50000.00,
         "unused_guarantee": 0.00,
-        "offset_details": [
-            {"period": 36, "offset_amount": 31336.37, "remaining_payment": 0.00}
-        ],
+        "offset_details": [{"period": 36, "offset_amount": 31336.37, "remaining_payment": 0.00}],
     },
 }
 

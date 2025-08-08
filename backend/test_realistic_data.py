@@ -4,8 +4,9 @@
 使用完整的还款计划测试参数推导
 """
 
-import requests
 import json
+
+import requests
 
 # 模拟完整的还款计划数据（前端实际会传递的）
 realistic_data = {
