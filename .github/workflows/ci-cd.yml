@@ -71,18 +71,15 @@ jobs:
     
     - name: Run unit tests with pytest
       run: |
-        cd backend
-        python -m pytest tests/ -v --cov=. --cov-report=xml --cov-report=html
+        python -m pytest tests/ -v --cov=backend --cov-report=xml --cov-report=html
     
     - name: Run integration tests
       run: |
-        cd backend
-        python -m pytest test_complete_flow.py -v
+        python -m pytest backend/test_complete_flow.py -v
     
     - name: Test realistic data scenarios
       run: |
-        cd backend
-        python test_realistic_data.py
+        python backend/test_realistic_data.py
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3

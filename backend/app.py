@@ -145,6 +145,9 @@ def extract_missing_params(data):
             extracted["guarantee"] = offset_info["total_offset"]
 
     return extracted
+
+
+def translate_result_fields(data):
     """将英文字段翻译为中文，并格式化数值"""
     if isinstance(data, dict):
         translated = {}
