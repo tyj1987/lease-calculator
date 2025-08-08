@@ -1,0 +1,63 @@
+# 超级优化版Dockerfile - 目标：镜像大小 < 150MB
+# 使用Alpine Linux + 多阶段构建
+
+# ===== 构建阶段 =====
+FROM python:3.10-alpine as builder
+
+# 安装构建依赖
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    linux-headers \
+    libc-dev \
+    libffi-dev \
+    make
+
+# 设置工作目录
+WORKDIR /app
+
+# 复制并安装Python依赖
+COPY backend/requirements-prod.txt .
+RUN pip install --user --no-cache-dir -r requirements-prod.txt
+
+# ===== 生产阶段 =====
+FROM python:3.10-alpine
+
+# 设置环境变量
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FLASK_APP=app.py \
+    FLASK_ENV=production \
+    PATH=/root/.local/bin:$PATH
+
+# 安装运行时依赖 (极简)
+RUN apk add --no-cache curl
+
+# 从构建阶段复制Python包
+COPY --from=builder /root/.local /root/.local
+
+# 设置工作目录
+WORKDIR /app
+
+# 只复制必要的应用文件
+COPY backend/app_lite.py backend/lease_calculator.py ./backend/
+COPY frontend/build/ ./frontend/build/
+
+# 创建符号链接，让app_lite.py作为app.py运行
+RUN ln -sf app_lite.py backend/app.py
+
+# 创建必要目录
+RUN mkdir -p logs
+
+# 设置工作目录
+WORKDIR /app/backend
+
+# 暴露端口
+EXPOSE 5002
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:5002/api/health || exit 1
+
+# 启动命令
+CMD ["python", "app.py"]

@@ -1,0 +1,118 @@
+# Docker构建时忽略的文件和目录
+# 减少构建上下文大小，加速构建过程
+
+# ===== Git相关 =====
+.git
+.gitignore
+.gitattributes
+
+# ===== 开发工具配置 =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== Python相关 =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# ===== 测试文件 =====
+tests/
+test_*.py
+*_test.py
+backend/test_*.py
+backend/*_test.py
+backend/final_validation_test.py
+backend/check_excel.py
+
+# ===== 文档和说明 =====
+README.md
+docs/
+*.md
+LICENSE
+
+# ===== 日志文件 =====
+logs/
+*.log
+
+# ===== 临时文件 =====
+tmp/
+temp/
+.tmp/
+*.tmp
+
+# ===== 系统文件 =====
+.DS_Store
+Thumbs.db
+*.Zone.Identifier
+
+# ===== CI/CD相关 =====
+.github/
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+
+# ===== Docker相关 =====
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# ===== 前端开发文件（只保留build目录）=====
+frontend/src/
+frontend/public/
+frontend/node_modules/
+frontend/package*.json
+frontend/.env*
+
+# ===== 脚本文件 =====
+scripts/
+*.sh
+install*.sh
+setup*.sh
+optimize*.sh
+
+# ===== 配置文件（根据需要调整）=====
+.env*
+config/*.service
+
+# ===== 其他开发文件 =====
+requirements.txt
+requirements-centos7.txt
+backend/requirements.txt
+backend/requirements-centos7.txt
+# 注意：保留 requirements-full-prod.txt
+
+# ===== 备份文件 =====
+*.bak
+*.backup
+*.old
+
+# ===== 性能测试相关 =====
+locustfile.py
+performance/
+
+# ===== 编译产物 =====
+*.pyc
+*.pyo
+*.pyd
+build/
+dist/
+*.egg-info/
