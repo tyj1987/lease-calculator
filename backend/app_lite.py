@@ -1,18 +1,18 @@
 # 轻量版应用 - 可选导入重量级依赖
 # app_lite.py - 优化版本，减少Docker镜像大小
 
-import os
+import base64
 import io
 import json
-import base64
+import os
 from datetime import datetime, timedelta
 from functools import wraps
 
-from flask import Flask, jsonify, request, send_file, render_template_string
-from flask_cors import CORS, cross_origin
 import numpy as np
 import numpy_financial as npf
 from dateutil.relativedelta import relativedelta
+from flask import Flask, jsonify, render_template_string, request, send_file
+from flask_cors import CORS, cross_origin
 
 # 可选导入 - 如果没有安装则禁用相关功能
 PANDAS_AVAILABLE = False
@@ -57,13 +57,13 @@ except ImportError:
 
 # 导入核心计算模块
 from lease_calculator import (
-    LeaseCalculator,
     CALCULATION_METHODS,
-    INTEREST_CALCULATION_METHODS,
-    PMT_FREQUENCIES,
-    GUARANTEE_DEPOSIT_METHODS,
-    OFFSET_METHODS,
     FLOAT_RATE_METHODS,
+    GUARANTEE_DEPOSIT_METHODS,
+    INTEREST_CALCULATION_METHODS,
+    OFFSET_METHODS,
+    PMT_FREQUENCIES,
+    LeaseCalculator,
 )
 
 app = Flask(__name__)
