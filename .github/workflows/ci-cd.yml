@@ -295,16 +295,16 @@ jobs:
           }
           
           echo "更新测试代码..."
-          git pull origin develop
+          git pull origin main
           
           echo "停止测试服务..."
           docker-compose -f docker-compose.test.yml down || true
           
           echo "拉取最新镜像..."
-          docker pull ${{ env.DOCKER_IMAGE }}:develop-${{ github.sha }}
+          docker pull ${{ env.DOCKER_IMAGE }}:main-${{ github.sha }}
           
           echo "启动测试服务..."
-          export IMAGE_TAG=develop-${{ github.sha }}
+          export IMAGE_TAG=main-${{ github.sha }}
           docker-compose -f docker-compose.test.yml up -d
           
           echo "验证测试部署..."
