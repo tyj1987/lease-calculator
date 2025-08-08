@@ -287,15 +287,17 @@ jobs:
         password: ${{ secrets.TEST_SSH_PASSWORD }}
         port: 22
         script: |
-          cd /opt/lease-calculator-test || {
-            echo "创建测试目录..."
-            mkdir -p /opt/lease-calculator-test
-            cd /opt/lease-calculator-test
-            git clone https://github.com/tyj1987/lease-calculator.git .
-          }
+          echo "准备测试目录..."
+          rm -rf /opt/lease-calculator-test
+          mkdir -p /opt/lease-calculator-test
+          cd /opt/lease-calculator-test
           
-          echo "更新测试代码..."
-          git pull origin main
+          echo "下载最新代码..."
+          git clone https://github.com/tyj1987/lease-calculator.git .
+          
+          echo "验证配置文件..."
+          ls -la docker-compose.yml
+          ls -la docker-compose.test.yml
           
           echo "检查Docker环境..."
           docker --version
@@ -347,15 +349,17 @@ jobs:
         password: ${{ secrets.PROD_SSH_PASSWORD }}
         port: 22
         script: |
-          cd /opt/lease-calculator || {
-            echo "创建生产目录..."
-            mkdir -p /opt/lease-calculator
-            cd /opt/lease-calculator
-            git clone https://github.com/tyj1987/lease-calculator.git .
-          }
+          echo "准备生产目录..."
+          rm -rf /opt/lease-calculator
+          mkdir -p /opt/lease-calculator
+          cd /opt/lease-calculator
           
-          echo "更新生产代码..."
-          git pull origin main
+          echo "下载最新代码..."
+          git clone https://github.com/tyj1987/lease-calculator.git .
+          
+          echo "验证配置文件..."
+          ls -la docker-compose.yml
+          ls -la docker-compose.test.yml
           
           echo "备份当前运行的容器..."
           docker tag ${{ env.DOCKER_IMAGE }}:latest ${{ env.DOCKER_IMAGE }}:backup-$(date +%Y%m%d-%H%M%S) || true
