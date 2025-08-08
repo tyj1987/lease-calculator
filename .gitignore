@@ -1,9 +1,11 @@
+# ===== 融资租赁计算器 - 生产级.gitignore =====
+# 确保仓库极其干净整洁，只包含必要的源代码文件
+
+# ===== Python相关 =====
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
 
 # Distribution / packaging
@@ -25,6 +27,50 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# ===== 虚拟环境 =====
+venv/
+env/
+.venv/
+backend/venv/
+backend/env/
+
+# ===== 测试和覆盖率 =====
+.pytest_cache/
+.tox/
+.cache/
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+.hypothesis/
+nosetests.xml
+
+# ===== 大型分析报告文件 =====
+bandit-report.json
+backend/bandit-report.json
+safety-report.json
+backend/safety-report.json
+*.report.json
+
+# ===== 日志文件 =====
+logs/
+backend/logs/
+*.log
+**/*.log
+
+# ===== 测试文件（开发期间生成的） =====
+backend/test_*.py
+backend/check_excel.py
+backend/final_validation_test.py
+test_output/
+test_results/
+
+# ===== 临时文件 =====
+*.tmp
+*.temp
+.tmp/
+temp/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
