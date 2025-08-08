@@ -312,6 +312,13 @@ jobs:
           export DOCKER_IMAGE=${{ env.DOCKER_IMAGE }}
           docker compose -f docker-compose.test.yml up -d
           
+          echo "等待服务启动..."
+          sleep 15
+          
+          echo "检查容器状态..."
+          docker ps -a
+          docker compose -f docker-compose.test.yml ps
+          
           echo "验证测试部署..."
           sleep 10
           curl -f http://localhost:8080/api/health || {
@@ -367,6 +374,10 @@ jobs:
           
           echo "等待服务启动..."
           sleep 15
+          
+          echo "检查容器状态..."
+          docker ps -a
+          docker compose ps
           
           echo "验证生产部署..."
           curl -f http://localhost/api/health || {
